@@ -1,6 +1,9 @@
 # asivm
 Asset security visibility and machine-learning risk platform
 
+See [docs/PROTOTYPE.md](docs/PROTOTYPE.md) for setup instructions, API
+examples, the demo workflow, migrations, tests, and prototype limitations.
+
 ## Run locally
 
 ```bash
