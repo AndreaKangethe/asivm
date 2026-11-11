@@ -13,12 +13,24 @@ def main() -> None:
     args = parser.parse_args()
 
     dataset = json.loads(Path(args.dataset).read_text())
-    rows = dataset["rows"]
-    features = [row["features"] for row in rows]
-    labels = [row["label"] for row in rows]
-    result = train_multiclass_candidate(features, labels, args.artifacts, args.version)
-    estimator = __import__("joblib").load(result["artifact_path"])
-    result["metrics_on_training_data"] = evaluate_multiclass_candidate(estimator, features, labels)
+    if "train_rows" not in dataset or "test_rows" not in dataset:
+        raise ValueError("dataset must provide chronological train_rows and test_rows")
+    train_rows = dataset["train_rows"]
+    test_rows = dataset["test_rows"]
+    result = train_multiclass_candidate(
+        [row["features"] for row in train_rows],
+        [row["label"] for row in train_rows],
+        args.artifacts,
+        args.version,
+    )
+    import joblib
+
+    estimator = joblib.load(result["artifact_path"])
+    result["test_metrics"] = evaluate_multiclass_candidate(
+        estimator,
+        [row["features"] for row in test_rows],
+        [row["label"] for row in test_rows],
+    )
     result["deployment_mode"] = "shadow"
     print(json.dumps(result))
 
