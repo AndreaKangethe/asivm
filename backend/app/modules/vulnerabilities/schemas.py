@@ -11,6 +11,8 @@ class VulnerabilityRead(BaseModel):
     epss_score: float | None
     is_kev: bool
     retrieved_at: datetime
+    kev_retrieved_at: datetime | None
+    epss_retrieved_at: datetime | None
 
     model_config = {"from_attributes": True}
 

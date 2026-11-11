@@ -63,3 +63,6 @@ class AnomalyEvent(Base):
     status: Mapped[AnomalyStatus] = mapped_column(default=AnomalyStatus.OPEN)
     contributing_features: Mapped[dict] = mapped_column(JSON, default=dict)
     detected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    reviewed_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    review_note: Mapped[str | None] = mapped_column(String(2000), nullable=True)

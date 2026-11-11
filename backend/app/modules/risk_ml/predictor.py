@@ -1,4 +1,5 @@
 from app.modules.risk_ml.features import build_feature_vector
+import numpy as np
 
 
 def predict_risk(estimator: object, values: dict[str, float]) -> float:
@@ -13,7 +14,7 @@ def explain_risk(estimator: object, values: dict[str, float]) -> dict[str, float
         import shap
     except ImportError as exc:
         raise RuntimeError("SHAP is required for explanations") from exc
-    explanation = shap.TreeExplainer(estimator)([build_feature_vector(values)])
+    explanation = shap.TreeExplainer(estimator)(np.asarray([build_feature_vector(values)]))
     values = explanation.values[0]
     if getattr(values, "ndim", 1) > 1:
         values = values[:, -1]

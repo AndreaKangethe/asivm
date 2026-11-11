@@ -45,3 +45,43 @@ def test_ip_change_resolves_to_same_asset() -> None:
         )
         assert result is not None
         assert result.id == asset.id
+
+
+def test_new_ip_with_known_hostname_reuses_asset_and_closes_old_interval() -> None:
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    observed_at = datetime(2026, 1, 2)
+    with Session(engine) as db:
+        asset = Asset(name="lab-host-2")
+        db.add(asset)
+        db.flush()
+        db.add(
+            AssetIdentifier(
+                asset_id=asset.id,
+                identifier_type="hostname",
+                value="lab-host-2",
+                valid_from=observed_at - timedelta(days=2),
+            )
+        )
+        db.add(
+            AssetIdentifier(
+                asset_id=asset.id,
+                identifier_type="ip",
+                value="10.0.0.8",
+                valid_from=observed_at - timedelta(days=2),
+            )
+        )
+        db.commit()
+        result = resolve_observation(
+            db,
+            ObservationData(
+                identifiers={"hostname": "lab-host-2", "ip": "10.0.0.9"},
+                observed_at=observed_at,
+            ),
+        )
+        db.commit()
+        identifiers = db.query(AssetIdentifier).filter_by(asset_id=asset.id).all()
+        assert result.id == asset.id
+        assert any(item.identifier_type == "ip" and item.value == "10.0.0.9" for item in identifiers)
+        old_ip = next(item for item in identifiers if item.value == "10.0.0.8")
+        assert old_ip.valid_to == observed_at

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy import DateTime, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -17,7 +17,17 @@ class Asset(Base):
 
 class AssetIdentifier(Base):
     __tablename__ = "asset_identifiers"
-    __table_args__ = (Index("ix_asset_identifier_lookup", "identifier_type", "value"),)
+    __table_args__ = (
+        Index("ix_asset_identifier_lookup", "identifier_type", "value"),
+        Index(
+            "uq_active_asset_identifier",
+            "identifier_type",
+            "value",
+            unique=True,
+            sqlite_where=text("valid_to IS NULL"),
+            postgresql_where=text("valid_to IS NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     asset_id: Mapped[int] = mapped_column(ForeignKey("assets.id"), index=True)

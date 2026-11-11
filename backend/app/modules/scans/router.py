@@ -10,5 +10,6 @@ router = APIRouter(prefix="/scans", tags=["scans"], dependencies=[Depends(requir
 
 
 @router.post("", response_model=ScanRead, status_code=201)
+@router.post("/run", response_model=ScanRead, status_code=201, include_in_schema=True)
 def post_scan(db: Session = Depends(get_db)) -> ScanRead:
     return run_scan(db)

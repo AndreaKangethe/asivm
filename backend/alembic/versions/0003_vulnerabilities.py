@@ -19,6 +19,8 @@ def upgrade() -> None:
         sa.Column("epss_score", sa.Float()),
         sa.Column("is_kev", sa.Boolean(), nullable=False),
         sa.Column("retrieved_at", sa.DateTime(), nullable=False),
+        sa.Column("kev_retrieved_at", sa.DateTime()),
+        sa.Column("epss_retrieved_at", sa.DateTime()),
     )
     op.create_index("ix_vulnerability_catalog_cve_id", "vulnerability_catalog", ["cve_id"])
     op.create_table(

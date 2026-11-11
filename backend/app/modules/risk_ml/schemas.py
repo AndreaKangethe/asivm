@@ -17,3 +17,6 @@ class AnomalyRead(BaseModel):
     score: float
     status: str
     detected_at: datetime
+    reviewed_by: str | None
+    reviewed_at: datetime | None
+    review_note: str | None

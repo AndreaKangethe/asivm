@@ -97,7 +97,16 @@
               const button = document.createElement("button");
               button.className = "secondary";
               button.textContent = "Triage";
-              button.onclick = async () => { await request(`/risk/anomalies/${item.id}/triage`, { method: "PATCH" }); refresh(); };
+              button.onclick = async () => {
+                const reviewer = window.prompt("Reviewer name", "demo-user");
+                if (!reviewer) return;
+                await request(`/risk/anomalies/${item.id}/triage`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ reviewed_by: reviewer, review_note: "Reviewed in dashboard" })
+                });
+                refresh();
+              };
               action.append(button);
             } else action.textContent = "-";
             row.append(action);

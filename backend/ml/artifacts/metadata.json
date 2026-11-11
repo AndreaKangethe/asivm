@@ -1,0 +1,7 @@
+{
+  "feature_version": "v1",
+  "artifacts": {
+    "risk": "created by bootstrap at application startup",
+    "anomaly": "created by bootstrap at application startup"
+  }
+}

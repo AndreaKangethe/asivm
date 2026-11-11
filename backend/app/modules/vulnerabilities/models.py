@@ -16,6 +16,8 @@ class VulnerabilityCatalog(Base):
     epss_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     is_kev: Mapped[bool] = mapped_column(default=False)
     retrieved_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    kev_retrieved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    epss_retrieved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class AssetVulnerability(Base):

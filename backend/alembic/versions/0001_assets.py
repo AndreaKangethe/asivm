@@ -29,10 +29,19 @@ def upgrade() -> None:
     )
     op.create_index("ix_asset_identifiers_asset_id", "asset_identifiers", ["asset_id"])
     op.create_index("ix_asset_identifier_lookup", "asset_identifiers", ["identifier_type", "value"])
+    op.create_index(
+        "uq_active_asset_identifier",
+        "asset_identifiers",
+        ["identifier_type", "value"],
+        unique=True,
+        postgresql_where=sa.text("valid_to IS NULL"),
+        sqlite_where=sa.text("valid_to IS NULL"),
+    )
 
 
 def downgrade() -> None:
     op.drop_index("ix_asset_identifier_lookup", table_name="asset_identifiers")
+    op.drop_index("uq_active_asset_identifier", table_name="asset_identifiers")
     op.drop_index("ix_asset_identifiers_asset_id", table_name="asset_identifiers")
     op.drop_table("asset_identifiers")
     op.drop_index("ix_assets_name", table_name="assets")

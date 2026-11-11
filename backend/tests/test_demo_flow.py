@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import Base
 from app.modules.assets.models import Asset, AssetIdentifier
 from app.modules.risk_ml.models import AnomalyEvent, RiskAssessment
+from app.modules.risk_ml.inference import infer_all
 from app.modules.scans.service import run_scan
 from app.modules.vulnerabilities.models import AssetVulnerability, VulnerabilityCatalog
 
@@ -23,5 +24,6 @@ def test_scan_creates_demo_risk_and_anomaly() -> None:
         db.commit()
         run_scan(db)
         run_scan(db)
-        assert db.query(RiskAssessment).count() == 2
+        infer_all(db)
+        assert db.query(RiskAssessment).count() == 1
         assert db.query(AnomalyEvent).count() == 1

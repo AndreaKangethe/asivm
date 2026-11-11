@@ -33,6 +33,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(32), nullable=False),
         sa.Column("contributing_features", sa.JSON(), nullable=False),
         sa.Column("detected_at", sa.DateTime(), nullable=False),
+        sa.Column("reviewed_by", sa.String(255)),
+        sa.Column("reviewed_at", sa.DateTime()),
+        sa.Column("review_note", sa.String(2000)),
     )
 
 

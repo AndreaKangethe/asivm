@@ -14,6 +14,7 @@ vulnerabilities, calculates demo risk scores, and records anomaly events.
 - Demo risk assessments using CVSS, EPSS, and KEV context
 - Demo anomaly events from repeated asset observations
 - Anomaly triage
+- Frozen model features, bootstrap risk/anomaly models, and inference scheduling
 - Feature contract and model-training utilities
 - FastAPI documentation at `/docs`
 - Browser dashboard for the end-to-end demo flow
@@ -78,7 +79,10 @@ Equivalent API calls:
 
 ```bash
 curl -H 'X-API-Key: change-me' \
-  -X POST http://localhost:8000/scans
+  -X POST http://localhost:8000/scans/run
+
+curl -H 'X-API-Key: change-me' \
+  -X POST http://localhost:8000/risk/infer
 
 curl -H 'X-API-Key: change-me' \
   http://localhost:8000/risk/assessments
@@ -92,10 +96,11 @@ curl -H 'X-API-Key: change-me' \
 | Area | Endpoints |
 | --- | --- |
 | Assets | `POST /assets`, `GET /assets` |
-| Scans | `POST /scans` |
+| Scans | `POST /scans/run` (also available as `POST /scans`) |
 | Vulnerabilities | `POST /vulnerabilities`, `GET /vulnerabilities` |
 | Risk | `GET /risk/assessments` |
-| Anomalies | `GET /risk/anomalies`, `PATCH /risk/anomalies/{id}/triage` |
+| Anomalies | `GET /risk/anomalies`, `PATCH /risk/anomalies/{id}/triage` with `reviewed_by` and optional `review_note` |
+| Models | `GET /risk/models`, `POST /risk/infer` |
 
 ## Database migrations
 
@@ -127,7 +132,7 @@ The tests cover:
 - Stable feature-vector ordering
 - Asset API behavior
 - NVD/KEV parsing and risk context
-- Scan → risk assessment → anomaly flow
+- Scan → inference → risk assessment → anomaly flow
 
 ## Prototype limitations
 
