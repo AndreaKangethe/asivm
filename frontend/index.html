@@ -1,127 +1,77 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ASIVM Prototype</title>
-    <style>
-      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-      body { background: #101827; color: #e5e7eb; margin: 0; }
-      main { max-width: 1100px; margin: auto; padding: 2rem; }
-      header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-      button { background: #2563eb; border: 0; border-radius: .4rem; color: white; cursor: pointer; padding: .6rem .9rem; }
-      button.secondary { background: #374151; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
-      section { background: #182235; border: 1px solid #293852; border-radius: .6rem; padding: 1rem; margin-top: 1rem; }
-      h2 { font-size: 1rem; margin-top: 0; }
-      .metric { font-size: 2rem; font-weight: 700; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border-bottom: 1px solid #293852; padding: .55rem; text-align: left; }
-      .status { color: #93c5fd; min-height: 1.5rem; }
-      .error { color: #fca5a5; }
-      @media (max-width: 650px) { header { align-items: flex-start; flex-direction: column; } }
-    </style>
-  </head>
-  <body>
-    <main>
-      <header>
-        <div>
-          <h1>ASIVM</h1>
-          <p>Asset security visibility and ML risk prototype.</p>
-        </div>
-        <button id="scan">Run demo scan</button>
-      </header>
-      <p id="status" class="status"></p>
-      <div class="grid">
-        <section><h2>Assets</h2><div id="asset-count" class="metric">-</div></section>
-        <section><h2>Vulnerabilities</h2><div id="vulnerability-count" class="metric">-</div></section>
-        <section><h2>Risk assessments</h2><div id="risk-count" class="metric">-</div></section>
-        <section><h2>Open anomalies</h2><div id="anomaly-count" class="metric">-</div></section>
-      </div>
-      <section>
-        <h2>Assets</h2>
-        <table><thead><tr><th>Name</th><th>Created</th><th>ID</th></tr></thead><tbody id="assets"></tbody></table>
-      </section>
-      <section>
-        <h2>Vulnerabilities</h2>
-        <table><thead><tr><th>CVE</th><th>CVSS</th><th>EPSS</th><th>KEV</th></tr></thead><tbody id="vulnerabilities"></tbody></table>
-      </section>
-      <section>
-        <h2>Anomalies</h2>
-        <table><thead><tr><th>Asset</th><th>Score</th><th>Status</th><th>Action</th></tr></thead><tbody id="anomalies"></tbody></table>
-      </section>
-    </main>
-    <script>
-      const API = "http://localhost:8000";
-      const API_KEY = "change-me";
-      const headers = { "X-API-Key": API_KEY };
-      const $ = (id) => document.querySelector(id);
-      const status = (message, error = false) => {
-        $("#status").textContent = message;
-        $("#status").className = error ? "status error" : "status";
-      };
-      const request = async (path, options = {}) => {
-        const response = await fetch(`${API}${path}`, { ...options, headers: { ...headers, ...(options.headers || {}) }});
-        if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
-        return response.json();
-      };
-      const cell = (value) => {
-        const element = document.createElement("td");
-        element.textContent = value ?? "-";
-        return element;
-      };
-      async function refresh() {
-        try {
-          const [assets, vulnerabilities, assessments, anomalies] = await Promise.all([
-            request("/assets"), request("/vulnerabilities"), request("/risk/assessments"), request("/risk/anomalies")
-          ]);
-          $("#asset-count").textContent = assets.length;
-          $("#vulnerability-count").textContent = vulnerabilities.length;
-          $("#risk-count").textContent = assessments.length;
-          $("#anomaly-count").textContent = anomalies.filter((item) => item.status === "open").length;
-          $("#assets").replaceChildren(...assets.map((item) => {
-            const row = document.createElement("tr");
-            row.append(cell(item.name), cell(item.created_at && new Date(item.created_at).toLocaleString()), cell(item.id));
-            return row;
-          }));
-          $("#vulnerabilities").replaceChildren(...vulnerabilities.map((item) => {
-            const row = document.createElement("tr");
-            row.append(cell(item.cve_id), cell(item.cvss_score), cell(item.epss_score), cell(item.is_kev ? "Yes" : "No"));
-            return row;
-          }));
-          $("#anomalies").replaceChildren(...anomalies.map((item) => {
-            const row = document.createElement("tr");
-            row.append(cell(item.asset_id), cell(item.score.toFixed(3)), cell(item.status));
-            const action = document.createElement("td");
-            if (item.status === "open") {
-              const button = document.createElement("button");
-              button.className = "secondary";
-              button.textContent = "Triage";
-              button.onclick = async () => {
-                const reviewer = window.prompt("Reviewer name", "demo-user");
-                if (!reviewer) return;
-                await request(`/risk/anomalies/${item.id}/triage`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ reviewed_by: reviewer, review_note: "Reviewed in dashboard" })
-                });
-                refresh();
-              };
-              action.append(button);
-            } else action.textContent = "-";
-            row.append(action);
-            return row;
-          }));
-          status("Dashboard refreshed");
-        } catch (error) {
-          status(`Unable to load dashboard: ${error.message}`, true);
-        }
-      }
-      $("#scan").onclick = async () => {
-        try { await request("/scans", { method: "POST" }); status("Demo scan completed"); await refresh(); }
-        catch (error) { status(`Scan failed: ${error.message}`, true); }
-      };
-      refresh();
-    </script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ASIVM | Asset Security Visibility</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#dbe5f2;background:#0b1220;line-height:1.4}
+    *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{border:0;border-radius:6px;padding:9px 13px;background:#2563eb;color:#fff;cursor:pointer;font-weight:650}button:hover{background:#1d4ed8}button.secondary{background:#1e293b;border:1px solid #334155}button.danger{background:#7f1d1d}
+    .shell{display:flex;min-height:100vh}.sidebar{width:242px;background:#0f1a2e;border-right:1px solid #20304a;padding:22px 14px;flex:none}.brand{padding:0 12px 24px}.brand strong{display:block;color:#fff;font-size:21px;letter-spacing:.08em}.brand small{color:#7f93ad}.nav{display:grid;gap:4px}.nav button{background:transparent;color:#9eb0c8;text-align:left;border-radius:7px}.nav button.active,.nav button:hover{background:#1d2c46;color:#fff}.nav .section{font-size:11px;color:#647994;text-transform:uppercase;letter-spacing:.12em;padding:18px 12px 5px}
+    .content{min-width:0;flex:1;padding:26px 32px;max-width:1600px}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.eyebrow{color:#7d95b7;text-transform:uppercase;letter-spacing:.1em;font-size:11px;font-weight:700}.topbar h1{margin:5px 0 0;color:#f8fafc;font-size:28px}.actions{display:flex;gap:8px;align-items:center}.status{color:#91a5bf;font-size:13px;min-height:20px}.status.error{color:#fca5a5}
+    .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card,.panel{background:#111e33;border:1px solid #243754;border-radius:9px}.card{padding:17px}.card .label{color:#8da2bf;font-size:13px}.metric{font-size:30px;font-weight:750;color:#f8fafc;margin-top:8px}.sub{color:#7890ae;font-size:12px;margin-top:3px}.riskbar{height:5px;border-radius:4px;background:#22324b;margin-top:12px;overflow:hidden}.riskbar i{display:block;height:100%}.critical i{background:#ef4444}.high i{background:#f97316}.medium i{background:#eab308}.low i{background:#22c55e}
+    .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:16px}.panel{padding:18px;margin-bottom:16px}.panel h2{font-size:16px;margin:0 0 14px;color:#f8fafc}.panel h3{font-size:14px;color:#dbe5f2;margin:20px 0 8px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.toolbar input,.toolbar select,.field{background:#0b1628;color:#dbe5f2;border:1px solid #30445f;border-radius:6px;padding:9px 10px;min-width:150px}.toolbar input.search{flex:1;min-width:220px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:#8298b4;font-weight:650;padding:10px 9px;border-bottom:1px solid #2a3d59;white-space:nowrap}td{padding:11px 9px;border-bottom:1px solid #1e304a;color:#c5d2e3;vertical-align:top}tr:hover td{background:#14243b}.empty{padding:28px 10px;text-align:center;color:#7187a4}.muted{color:#7890ae}.pill{display:inline-flex;align-items:center;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700}.pill.critical{background:#4b1820;color:#fda4af}.pill.high{background:#4a2515;color:#fdba74}.pill.medium{background:#443611;color:#fde68a}.pill.low{background:#123a2c;color:#86efac}.pill.neutral{background:#20324d;color:#abc0da}.kev{color:#fb7185;font-weight:700}.link{color:#7db2ff;cursor:pointer}.detail{border-left:3px solid #2563eb;padding-left:13px}.detail dl{display:grid;grid-template-columns:130px 1fr;gap:7px 12px;font-size:13px}.detail dt{color:#7890ae}.detail dd{margin:0;color:#dbe5f2;word-break:break-word}.notice{border:1px dashed #516580;color:#9eb0c8;border-radius:7px;padding:12px;font-size:13px;background:#101b2c}.feed{display:grid;gap:9px}.feed div{border-left:2px solid #334e73;padding-left:10px;font-size:13px}.feed time{display:block;color:#7187a4;font-size:11px}.tabs{display:flex;gap:5px;border-bottom:1px solid #2a3d59;margin:-4px 0 16px}.tabs button{border-radius:5px 5px 0 0;background:transparent;color:#8da2bf;border-bottom:2px solid transparent}.tabs button.active{color:#fff;border-bottom-color:#3b82f6}.progress{height:8px;background:#1e304a;border-radius:5px;overflow:hidden}.progress i{display:block;height:100%;background:#3b82f6}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mobile-menu{display:none}
+    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.sidebar{width:210px}.content{padding:22px}}
+    @media(max-width:680px){.shell{display:block}.sidebar{width:auto;border-right:0;border-bottom:1px solid #20304a;padding:12px}.brand{padding:7px 10px 12px}.nav{display:flex;overflow:auto}.nav .section{display:none}.nav button{white-space:nowrap}.content{padding:18px 12px}.topbar{display:block}.actions{margin-top:12px}.cards{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><strong>ASIVM</strong><small>Asset Security Visibility &amp; ML Risk</small></div>
+    <nav class="nav" id="nav">
+      <div class="section">Operations</div>
+      <button data-view="dashboard" class="active">▦ &nbsp; Dashboard</button>
+      <button data-view="findings">⚠ &nbsp; Findings</button>
+      <button data-view="assets">▣ &nbsp; Assets</button>
+      <button data-view="scans">⌁ &nbsp; Scans</button>
+      <div class="section">Governance</div>
+      <button data-view="scope">◌ &nbsp; Scope</button>
+      <button data-view="intelligence">◈ &nbsp; Intelligence</button>
+      <button data-view="team">♙ &nbsp; Team</button>
+      <button data-view="audit">≡ &nbsp; Audit log</button>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="topbar"><div><div class="eyebrow">Security operations</div><h1 id="title">Dashboard</h1><div id="status" class="status"></div></div><div class="actions"><button class="secondary" id="refresh">Refresh data</button><button id="run-scan">Run available collector</button></div></header>
+    <div id="app"></div>
+  </main>
+</div>
+<script>
+const API="http://localhost:8000", headers={"X-API-Key":"change-me"};
+const state={view:"dashboard",assets:[],vulnerabilities:[],assessments:[],anomalies:[],scans:[],models:[],selected:null};
+const $=s=>document.querySelector(s), esc=v=>String(v??"—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const fmt=v=>v?new Date(v).toLocaleString():"—";
+const risk=v=>v==null?"—":v>=9?"Critical":v>=7?"High":v>=4?"Medium":"Low";
+const pill=v=>`<span class="pill ${String(v).toLowerCase()}">${esc(v)}</span>`;
+function message(text,error=false){$("#status").textContent=text;$("#status").className="status"+(error?" error":"")}
+async function request(path,options={}){const r=await fetch(API+path,{...options,headers:{...headers,...(options.headers||{})}});if(!r.ok)throw Error(`${r.status}: ${await r.text()}`);return r.status===204?null:r.json()}
+async function load(){message("Loading current records…");try{const results=await Promise.allSettled(["/assets","/vulnerabilities","/risk/assessments","/risk/anomalies","/risk/models"].map(p=>request(p)));const [a,v,r,n,m]=results;state.assets=a.status==="fulfilled"?a.value:[];state.vulnerabilities=v.status==="fulfilled"?v.value:[];state.assessments=r.status==="fulfilled"?r.value:[];state.anomalies=n.status==="fulfilled"?n.value:[];state.models=m.status==="fulfilled"?m.value:[];render();message("Live data refreshed")}catch(e){message("Unable to load ASIVM data: "+e.message,true)}}
+function setView(view){state.view=view;state.selected=null;document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));$("#title").textContent=view[0].toUpperCase()+view.slice(1).replace("-"," ");render()}
+function asset(id){return state.assets.find(x=>x.id===id)}
+function dashboard(){const total=state.assets.length, open=state.vulnerabilities.length, kev=state.vulnerabilities.filter(x=>x.is_kev).length;const latest=[...state.assessments].sort((a,b)=>new Date(b.assessed_at)-new Date(a.assessed_at));return `<div class="cards">
+<div class="card"><div class="label">Total assets</div><div class="metric">${total}</div><div class="sub">Owner coverage unavailable in current schema</div><div class="riskbar low"><i style="width:${total?100:0}%"></i></div></div>
+<div class="card"><div class="label">Open findings</div><div class="metric">${open}</div><div class="sub">${kev} linked to CISA KEV</div><div class="riskbar high"><i style="width:${open?Math.min(100,kev/open*100):0}%"></i></div></div>
+<div class="card"><div class="label">Overdue remediation</div><div class="metric">—</div><div class="sub">Deadlines are not stored by the backend</div></div>
+<div class="card"><div class="label">ML anomalies</div><div class="metric">${state.anomalies.filter(x=>x.status==="open").length}</div><div class="sub">${state.models.filter(x=>x.is_active).length} active registry entries</div></div>
+</div><div class="grid"><section class="panel"><h2>Findings requiring attention</h2>${findingTable(state.vulnerabilities.slice(0,10))}</section><section class="panel"><h2>Risk distribution</h2><div class="feed">
+${["Critical","High","Medium","Low"].map(level=>{const count=state.vulnerabilities.filter(v=>risk(v.cvss_score)===level).length;return `<div><a class="link" data-filter="${level}">${pill(level)} &nbsp; ${count} findings</a><div class="sub">CVSS severity; ML and threat signals are separate</div></div>`}).join("")}
+</div><h3>Recent security changes</h3>${latest.slice(0,5).map(x=>`<div class="feed"><div>Risk assessment recorded for asset <span class="link" data-asset="${x.asset_id}">#${x.asset_id}</span><time>${fmt(x.assessed_at)} · model ${esc(x.model_version)}</time></div></div>`).join("")||'<div class="empty">No assessment history recorded.</div>'}</section></div>`}
+function findingTable(items){if(!items.length)return '<div class="empty">No findings are available from the current API.</div>';return `<table><thead><tr><th>CVE</th><th>Severity</th><th>Threat</th><th>EPSS</th><th>Retrieved</th></tr></thead><tbody>${items.map(v=>`<tr><td><a class="link" data-vuln="${v.id}">${esc(v.cve_id)}</a><div class="muted">${esc((v.description||"").slice(0,80))}</div></td><td>${pill(risk(v.cvss_score))}<div class="muted">CVSS ${esc(v.cvss_score)}</div></td><td>${v.is_kev?'<span class="kev">KEV exploited</span>':'<span class="muted">No KEV match</span>'}</td><td>${v.epss_score==null?"—":(v.epss_score*100).toFixed(1)+"%"}</td><td>${fmt(v.retrieved_at)}</td></tr>`).join("")}</tbody></table>`}
+function findings(){return `<section class="panel"><div class="toolbar"><input id="find-search" class="search" placeholder="Search CVE, asset, IP, owner, location or assignee"><select id="risk-filter"><option value="">All risk levels</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select><select id="kev-filter"><option value="">All threat status</option><option value="yes">KEV exploited</option><option value="no">Not in KEV</option></select><button class="secondary" id="export">Export CSV</button></div><div id="finding-results">${findingTable(state.vulnerabilities)}</div><div class="notice" style="margin-top:14px">Ownership, location, assignee, status, deadlines, fix hints and remediation history are not present in the current backend schema. They are intentionally not simulated.</div></section>`}
+function assets(){return `<section class="panel"><div class="toolbar"><input id="asset-search" class="search" placeholder="Search asset or identifier"><button id="new-asset">Register asset</button></div><table><thead><tr><th>Asset</th><th>Identifiers</th><th>Created</th><th>Open findings</th><th>Latest ML risk</th></tr></thead><tbody>${state.assets.length?state.assets.map(a=>{const ids=(a.identifiers||[]).map(i=>`${esc(i.identifier_type)}: ${esc(i.value)}`).join("<br>")||"—";const vulns=state.vulnerabilities.filter(v=>v.asset_id===a.id).length;const r=state.assessments.find(x=>x.asset_id===a.id);return `<tr><td><a class="link" data-asset="${a.id}">${esc(a.name)}</a><div class="muted">ID ${a.id}</div></td><td>${ids}</td><td>${fmt(a.created_at)}</td><td>${vulns}</td><td>${r?r.score.toFixed(2):"—"}</td></tr>`}).join(""):'<tr><td colspan="5" class="empty">No assets registered.</td></tr>'}</tbody></table><div class="notice" style="margin-top:14px">Departments, owners, locations, criticality, last-seen, services and editable metadata require backend fields that are not currently available.</div></section>`}
+function scans(){return `<div class="grid"><section class="panel"><h2>Authorized scan</h2><p class="muted">Starting a scan is an explicit action. Refreshing this page never starts a scan.</p><div class="notice">The current API exposes the lab collector only; scope selection, Nmap XML, Trivy imports and scan authorization records are not implemented.</div><button id="scan-now" style="margin-top:14px">Start available collector</button></section><section class="panel"><h2>Scan history</h2><div class="empty">The backend exposes scan creation but not scan history or evidence reads.</div></section></div>`}
+function intelligence(){return `<div class="grid"><section class="panel"><h2>Vulnerability intelligence</h2><div class="two-col"><div><h3>NVD CVEs</h3><div class="metric">${state.vulnerabilities.length}</div><div class="sub">Catalog records</div></div><div><h3>CISA KEV</h3><div class="metric">${state.vulnerabilities.filter(v=>v.is_kev).length}</div><div class="sub">Known exploited records</div></div><div><h3>EPSS</h3><div class="metric">${state.vulnerabilities.filter(v=>v.epss_score!=null).length}</div><div class="sub">Records with score</div></div><div><h3>Version ranges</h3><div class="metric">—</div><div class="sub">Not stored</div></div></div></section><section class="panel"><h2>Synchronization controls</h2><div class="notice">Feed synchronization endpoints and version-range storage are not implemented. Existing catalog values are displayed as received; no intelligence data is fabricated here.</div></section></div>`}
+function mlPanel(){return `<section class="panel"><h2>Machine-learning registry</h2>${state.models.length?`<table><thead><tr><th>Model</th><th>Version</th><th>Feature version</th><th>Status</th><th>Metrics</th></tr></thead><tbody>${state.models.map(m=>`<tr><td>${esc(m.name)}</td><td>${esc(m.version)}</td><td>${esc(m.feature_version)}</td><td>${m.is_active?'<span class="pill low">Active</span>':'<span class="pill neutral">Inactive</span>'}</td><td>${esc(JSON.stringify(m.metrics||{}))}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">No registered model artifacts.</div>'}<div class="notice" style="margin-top:14px">Scores shown in ASIVM are distinct from CVSS and threat intelligence. Confidence, training provenance and deployment health are not exposed by the current API.</div></section>`}
+function governance(view){const labels={scope:["Scope","Allow and deny rules, target testing, and authorization records are not implemented in the current backend."],team:["Team","Team member management and viewer/analyst/admin authorization are not implemented in the current backend."],audit:["Audit log","Administrator-only audit records are not implemented in the current backend."]};return `<section class="panel"><h2>${labels[view][0]}</h2><div class="notice">${labels[view][1]} This screen does not invent records or controls that cannot be persisted.</div></section>`}
+function detail(){if(!state.selected)return"";if(state.selected.type==="vuln"){const v=state.vulnerabilities.find(x=>x.id===state.selected.id);return `<section class="panel detail"><h2>${esc(v.cve_id)} <button class="secondary" data-close>Close</button></h2><dl><dt>Description</dt><dd>${esc(v.description)}</dd><dt>CVSS severity</dt><dd>${pill(risk(v.cvss_score))} ${esc(v.cvss_score)}</dd><dt>EPSS threat signal</dt><dd>${v.epss_score==null?"Not available":(v.epss_score*100).toFixed(1)+"%"}</dd><dt>KEV</dt><dd>${v.is_kev?"Known exploited vulnerability":"No KEV match"}</dd><dt>Catalog retrieval</dt><dd>${fmt(v.retrieved_at)}</dd></dl><div class="notice" style="margin-top:15px">Remediation instructions, target versions, fix steps, references, ticket creation, assignment, notes, verification scans and remediation history require finding records not present in the current schema.</div></section>`}const a=asset(state.selected.id);return `<section class="panel detail"><h2>${esc(a.name)} <button class="secondary" data-close>Close</button></h2><dl><dt>Asset ID</dt><dd>${a.id}</dd><dt>Created</dt><dd>${fmt(a.created_at)}</dd><dt>Identifiers</dt><dd>${(a.identifiers||[]).map(i=>esc(i.identifier_type)+": "+esc(i.value)).join("<br>")||"—"}</dd><dt>Risk assessments</dt><dd>${state.assessments.filter(x=>x.asset_id===a.id).length}</dd><dt>Anomalies</dt><dd>${state.anomalies.filter(x=>x.asset_id===a.id).length}</dd></dl></section>`}
+function render(){const body=state.view==="dashboard"?dashboard():state.view==="findings"?findings():state.view==="assets"?assets():state.view==="scans"?scans():state.view==="intelligence"?intelligence():governance(state.view);$("#app").innerHTML=body+(state.view==="dashboard"||state.view==="findings"||state.view==="assets"?detail():"")+(state.view==="dashboard"||state.view==="intelligence"?mlPanel():"");wire()}
+function wire(){document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelectorAll("[data-vuln]").forEach(e=>e.onclick=()=>{state.selected={type:"vuln",id:+e.dataset.vuln};render()});document.querySelectorAll("[data-asset]").forEach(e=>e.onclick=()=>{state.selected={type:"asset",id:+e.dataset.asset};render()});document.querySelectorAll("[data-close]").forEach(e=>e.onclick=()=>{state.selected=null;render()});document.querySelectorAll("[data-filter]").forEach(e=>e.onclick=()=>{setView("findings");setTimeout(()=>{$("#risk-filter").value=e.dataset.filter;filterFindings()},0)});$("#refresh")?.addEventListener("click",load);$("#run-scan")?.addEventListener("click",scan);$("#scan-now")?.addEventListener("click",scan);$("#export")?.addEventListener("click",exportCsv);$("#risk-filter")?.addEventListener("change",filterFindings);$("#kev-filter")?.addEventListener("change",filterFindings);$("#find-search")?.addEventListener("input",filterFindings)}
+function filterFindings(){const q=($("#find-search")?.value||"").toLowerCase(),r=$("#risk-filter")?.value,k=$("#kev-filter")?.value;let items=state.vulnerabilities.filter(v=>(!q||JSON.stringify(v).toLowerCase().includes(q))&&(!r||risk(v.cvss_score)===r)&&(!k||(k==="yes"?v.is_kev:!v.is_kev)));$("#finding-results").innerHTML=findingTable(items)}
+async function scan(){try{message("Starting explicit authorized collector…");await request("/scans/run",{method:"POST"});message("Scan completed; refreshing records");await load()}catch(e){message("Scan failed: "+e.message,true)}}
+function exportCsv(){const cols=["cve_id","cvss_score","epss_score","is_kev","retrieved_at"],csv=[cols.join(","),...state.vulnerabilities.map(v=>cols.map(c=>`"${String(v[c]??"").replaceAll('"','""')}"`).join(","))].join("\\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="asivm-findings.csv";a.click();URL.revokeObjectURL(a.href)}
+load();
+</script>
+</body>
 </html>

@@ -15,13 +15,7 @@ from app.modules.vulnerabilities.router import router as vulnerabilities_router
 from app.modules.risk_ml import models as _risk_models
 from app.modules.risk_ml.router import router as risk_router
 from app.modules.risk_ml.scheduler import create_scheduler
-from app.modules.risk_ml.inference import ensure_demo_models, infer_all
-from app.modules.scans.service import run_scan
-
-
-def scheduled_scan() -> None:
-    with SessionLocal() as db:
-        run_scan(db)
+from app.modules.risk_ml.inference import infer_all
 
 def scheduled_inference() -> None:
     with SessionLocal() as db:
@@ -32,9 +26,7 @@ def scheduled_inference() -> None:
 async def lifespan(_: FastAPI):
     configure_logging()
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        ensure_demo_models(db)
-    scheduler = create_scheduler(scheduled_scan, scheduled_inference)
+    scheduler = create_scheduler(None, scheduled_inference)
     scheduler.start()
     yield
     scheduler.shutdown(wait=False)

@@ -19,7 +19,8 @@ This guide is the operational reference for running the prototype locally, demon
 - Historical intelligence snapshots and ingestion audit records
 - Shadow model registration, lifecycle audit, and held-out-data validation helpers
 - FastAPI documentation at `/docs`
-- Lightweight browser dashboard for the end-to-end demo flow
+- Browser security operations console for dashboard, findings, assets, scans,
+  intelligence, ML registry, and governance navigation
 
 ## Prerequisites
 
@@ -91,13 +92,14 @@ API_KEY='replace-this-value' docker compose up --build -d
 
 ## Demonstrate the workflow
 
-1. Start the Docker stack and seed demo data.
-2. Open the dashboard at http://localhost:8080.
-3. Click **Run demo scan**.
-4. Confirm that the asset and vulnerability counts update.
-5. Run the scan a second time to create a demo anomaly.
-6. Click **Triage** beside the anomaly.
-7. Open http://localhost:8000/docs to inspect scans, assessments, anomalies, and models.
+1. Start the backend and frontend.
+2. Seed the demo asset and vulnerability.
+3. Open the dashboard at <http://localhost:8080>.
+4. Click **Run demo scan**.
+5. Confirm that the asset and vulnerability counts update.
+6. Run the scan a second time to create a demo anomaly.
+7. Use the findings and assets views to inspect the records returned by the API.
+8. Use the API documentation to inspect scans, assessments, and anomalies.
 
 Equivalent API calls:
 
@@ -257,6 +259,17 @@ If you configured `API_KEY`, use that value instead.
 
 ## Prototype limitations
 
-This is a demonstrable infrastructure prototype, not a production deployment. The collector is simulated, the frontend is intentionally lightweight, and authentication uses a shared API key. Production authentication and authorization, secret management, monitoring, high availability, deployment hardening, dashboard integration for every new v3 capability, approved analyst labeling, asset criticality and exposure evidence, verified outcome sources, scheduled retraining, and automatic model promotion remain outside the current scope.
+The collector is simulated, feed parsers consume supplied snapshots, and the
+frontend does not invent records for backend features that are not implemented.
+The current schema does not yet provide ownership, remediation workflow,
+scope authorization, Nmap/Trivy imports, team administration, audit events,
+or feed synchronization controls; those screens report the limitation plainly.
+Authentication uses a shared API key.
+Production authentication, authorization, monitoring, secret management,
+high-availability deployment, and large-scale model governance are outside
+the prototype scope.
+Dashboard integration for every new v3 capability, approved analyst labeling,
+asset criticality and exposure evidence, verified outcome sources, scheduled
+retraining, and automatic model promotion remain outside the current scope.
 
 Do not present synthetic/demo results as validated real-world model performance.
