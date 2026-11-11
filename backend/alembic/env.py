@@ -20,7 +20,9 @@ from app.modules.risk_ml.models import (  # noqa: F401
     ExploitationOutcome,
     MLModelVersion,
     MLTrainingRun,
+    ModelLifecycleEvent,
     RiskAssessment,
+    RiskAssessmentReview,
     RiskLabel,
     TrainingDatasetRow,
 )
