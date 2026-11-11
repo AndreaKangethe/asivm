@@ -47,9 +47,68 @@ class ModelRegistry:
         if record is None:
             requested = f" with feature version {feature_version}" if feature_version else ""
             raise RuntimeError(f"No active {name} model{requested} is registered")
+        self._validate_contract(record)
+        return self.load(record.version)
+
+    @staticmethod
+    def _validate_contract(record: MLModelVersion) -> None:
         if record.feature_version not in SUPPORTED_FEATURE_VERSIONS:
             raise RuntimeError(f"Model {record.version} uses unsupported feature version {record.feature_version}")
         expected_names = FEATURE_NAMES_BY_VERSION[record.feature_version]
         if expected_names and record.feature_names and tuple(record.feature_names) != expected_names:
             raise RuntimeError(f"Model {record.version} does not match the {record.feature_version} feature contract")
-        return self.load(record.version)
+
+    def register_shadow(
+        self,
+        db: Session,
+        *,
+        name: str,
+        version: str,
+        artifact_path: str,
+        feature_version: str,
+        metrics: dict,
+        training_metadata: dict,
+        contract_hash: str | None = None,
+    ) -> MLModelVersion:
+        if feature_version not in SUPPORTED_FEATURE_VERSIONS:
+            raise ValueError(f"unsupported feature version: {feature_version}")
+        if db.scalar(select(MLModelVersion).where(MLModelVersion.version == version)) is not None:
+            raise ValueError(f"model version already registered: {version}")
+        record = MLModelVersion(
+            name=name,
+            version=version,
+            artifact_path=artifact_path,
+            feature_version=feature_version,
+            feature_names=list(FEATURE_NAMES_BY_VERSION[feature_version]),
+            contract_hash=contract_hash,
+            training_metadata=training_metadata,
+            metrics=metrics,
+            deployment_mode="shadow",
+            is_active=False,
+        )
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+        return record
+
+    def promote(self, db: Session, version: str) -> MLModelVersion:
+        candidate = db.scalar(select(MLModelVersion).where(MLModelVersion.version == version))
+        if candidate is None:
+            raise ValueError(f"unknown model version: {version}")
+        self._validate_contract(candidate)
+        if candidate.deployment_mode != "shadow":
+            raise ValueError("only shadow candidates can be explicitly promoted")
+        for active in db.scalars(
+            select(MLModelVersion).where(
+                MLModelVersion.name == candidate.name,
+                MLModelVersion.feature_version == candidate.feature_version,
+                MLModelVersion.is_active.is_(True),
+            )
+        ):
+            active.is_active = False
+            active.deployment_mode = "retired"
+        candidate.is_active = True
+        candidate.deployment_mode = "active"
+        db.commit()
+        db.refresh(candidate)
+        return candidate
