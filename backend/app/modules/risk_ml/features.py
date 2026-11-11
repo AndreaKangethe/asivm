@@ -4,8 +4,8 @@ from collections.abc import Mapping
 FEATURE_VERSION = "v1"
 FEATURE_NAMES = ("kev_count", "epss_max", "asset_age_days", "observation_change_count")
 
-FEATURE_VERSION_V3 = "v3"
-FEATURE_NAMES_V3 = (
+FEATURE_VERSION_V2 = "v2"
+FEATURE_NAMES_V2 = (
     "kev_count",
     "epss_max",
     "asset_age_days",
@@ -20,6 +20,10 @@ FEATURE_NAMES_V3 = (
     "ip_change_count",
     "hostname_change_count",
     "vulnerability_change_count",
+)
+
+FEATURE_VERSION_V3 = "v3"
+FEATURE_NAMES_V3 = FEATURE_NAMES_V2 + (
     "asset_criticality_score",
     "business_impact_score",
     "internet_exposed",
@@ -31,6 +35,10 @@ FEATURE_NAMES_V3 = (
 
 def build_feature_vector(values: Mapping[str, float]) -> list[float]:
     return [float(values.get(name, 0.0)) for name in FEATURE_NAMES]
+
+
+def build_feature_vector_v2(values: Mapping[str, float]) -> list[float]:
+    return [float(values.get(name, 0.0)) for name in FEATURE_NAMES_V2]
 
 
 def build_feature_vector_v3(values: Mapping[str, float]) -> list[float]:
