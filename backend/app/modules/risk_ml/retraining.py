@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import joblib
+from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import GradientBoostingClassifier, IsolationForest
 
 from app.modules.risk_ml.features import FEATURE_VERSION
@@ -26,3 +27,13 @@ def train_anomaly(features: list[list[float]], artifact_dir: str, version: str) 
     artifact = path / f"{version}.joblib"
     joblib.dump(model, artifact)
     return str(artifact)
+
+
+def evaluate_candidate(estimator: object, features: list[list[float]], labels: list[int]) -> float:
+    if hasattr(estimator, "predict_proba"):
+        return float(roc_auc_score(labels, estimator.predict_proba(features)[:, 1]))
+    raise ValueError("candidate does not expose probability predictions")
+
+
+def promote_candidate(candidate_score: float, active_score: float | None, minimum_score: float = 0.6) -> bool:
+    return candidate_score >= minimum_score and (active_score is None or candidate_score > active_score)
