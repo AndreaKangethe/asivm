@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+backend/.venv/
 asivm.db
 backend/ml/datasets/raw/*
 backend/ml/datasets/processed/*
