@@ -1,32 +1,53 @@
-# asivm
-Asset security visibility and machine-learning risk platform
+# ASIVM
 
-See [docs/PROTOTYPE.md](docs/PROTOTYPE.md) for setup instructions, API
-examples, the demo workflow, migrations, tests, and prototype limitations.
+Asset security visibility and machine-learning risk platform.
 
-## Run locally
+ASIVM connects asset identity, vulnerability intelligence, risk assessment, anomaly triage, and model governance in one traceable workflow. It helps security teams prioritize which assets need attention first and understand the evidence behind each decision.
 
-```bash
-cd backend
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-PYTHONPATH=. .venv/bin/uvicorn app.main:app --reload
-```
-
-Protected endpoints require `X-API-Key`; configure `API_KEY` in `.env`.
-
-## Run with Docker
+## Quick start with Docker
 
 ```bash
-docker compose up --build
+git clone https://github.com/AndreaKangethe/asivm.git
+cd asivm
+
+git fetch origin pull/2/head:pr-2
+git switch pr-2
+
+docker compose up --build -d
+docker compose exec backend python scripts/seed.py
 ```
 
-The API is available at `http://localhost:8000` and the dashboard at
-`http://localhost:8080`.
+Open:
+
+- Dashboard: http://localhost:8080
+- API documentation: http://localhost:8000/docs
+
+The default API key for the local walkthrough is `change-me`.
+
+Check the stack and logs:
+
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+Stop it with:
+
+```bash
+docker compose down
+```
 
 ## Tests
 
 ```bash
-cd backend
-PYTHONPATH=. .venv/bin/pytest
+docker compose exec backend pytest
 ```
+
+## Documentation
+
+- [Judge presentation brief](docs/JUDGES_PRESENTATION.md) — product story, demo script, value proposition, and scope note
+- [Operations guide](docs/PROTOTYPE.md) — Docker/native setup, API examples, ingestion, migrations, tests, and troubleshooting
+
+## Scope note
+
+The local walkthrough uses controlled demo data. Production deployment still requires approved analyst labels, asset criticality and exposure evidence, verified outcomes, production authentication, monitoring, scheduled retraining, and controlled model promotion.

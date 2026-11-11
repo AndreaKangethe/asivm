@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, text
+from sqlalchemy import DateTime, Float, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -12,6 +12,9 @@ class Asset(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    criticality_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    criticality_source: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    criticality_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     identifiers: Mapped[list["AssetIdentifier"]] = relationship(back_populates="asset")
 
 
