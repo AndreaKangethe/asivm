@@ -41,17 +41,20 @@ For the native Python workflow:
 From the repository root:
 
 ```bash
-git clone https://github.com/AndreaKangethe/asivm.git
+git clone -b asivm-complete-local https://github.com/AndreaKangethe/asivm.git
 cd asivm
-
-git fetch origin pull/2/head:pr-2
-git switch pr-2
 
 docker compose up --build -d
 docker compose ps
 ```
 
 The Compose stack starts PostgreSQL, applies migrations from the backend container, starts the API, and serves the dashboard.
+
+Use `asivm-complete-local` when you want the combined build. It contains the
+restored UI and the latest ML/backend implementation from the v3 contract
+milestone. The UI is a static responsive console with Dashboard, Findings,
+Assets, Scans, Scope, Intelligence, Team, Audit, ML registry visibility,
+filters, risk navigation, detail panels, and CSV export.
 
 | Service | Address | Purpose |
 | --- | --- | --- |
@@ -88,6 +91,20 @@ The default prototype API key is `change-me`. Set a different value before start
 
 ```bash
 API_KEY='replace-this-value' docker compose up --build -d
+```
+
+If Docker Compose is unavailable, run the API natively and serve the static
+frontend separately:
+
+```bash
+# Terminal 1
+cd backend
+DATABASE_URL=sqlite:///./asivm-local.db PYTHONPATH=. \
+  .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# Terminal 2
+cd frontend
+python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
 ## Demonstrate the workflow
@@ -273,3 +290,8 @@ asset criticality and exposure evidence, verified outcome sources, scheduled
 retraining, and automatic model promotion remain outside the current scope.
 
 Do not present synthetic/demo results as validated real-world model performance.
+
+The frontend is intentionally honest about these boundaries: unsupported
+ownership, remediation, scope, Nmap/Trivy import, team, audit, and intelligence
+synchronization workflows are shown as unavailable rather than represented by
+mock records.
