@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ASIVM</title></head>
+  <body>
+    <main>
+      <h1>ASIVM</h1>
+      <p>Asset security visibility and machine-learning risk dashboard.</p>
+      <button id="refresh">Refresh assets</button>
+      <pre id="output">Loading...</pre>
+    </main>
+    <script>
+      const output = document.querySelector("#output");
+      document.querySelector("#refresh").onclick = async () => {
+        const response = await fetch("http://localhost:8000/assets");
+        output.textContent = JSON.stringify(await response.json(), null, 2);
+      };
+      document.querySelector("#refresh").click();
+    </script>
+  </body>
+</html>
