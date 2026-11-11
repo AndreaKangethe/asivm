@@ -12,9 +12,12 @@ from app.modules.risk_ml.models import (  # noqa: F401
     AnomalyEvent,
     AnomalyStatus,
     AssessmentFactor,
+    ExploitationOutcome,
     MLModelVersion,
     MLTrainingRun,
     RiskAssessment,
+    RiskLabel,
+    TrainingDatasetRow,
 )
 
 config = context.config
@@ -33,7 +36,7 @@ def run_migrations_online() -> None:
     connectable = create_engine(get_settings().database_url, poolclass=pool.NullPool)
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
-        with context.begin_transaction():
+        with connection.begin():
             context.run_migrations()
 
 
