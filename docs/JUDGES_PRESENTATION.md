@@ -4,6 +4,24 @@
 
 ASIVM is an asset security visibility and machine-learning risk platform that helps security teams move from disconnected vulnerability findings to prioritized, evidence-based action. It connects asset identity, vulnerability intelligence, risk assessment, anomaly detection, and governance in one traceable workflow.
 
+## The goal—and what ASIVM achieved
+
+**Goal:** Build a credible, governed foundation for combining asset context, vulnerability intelligence, and machine-learning risk decisions without inventing evidence or hiding uncertainty.
+
+**Achieved outcome:** ASIVM now delivers an end-to-end platform foundation that:
+
+- Preserves the existing v1/v2 workflows while introducing a versioned v3 feature contract.
+- Models the full path from asset identity and observations to vulnerability relationships and risk review.
+- Imports NVD, CISA KEV, and FIRST EPSS intelligence with pagination, retries, provenance, historical snapshots, and ingestion audits.
+- Maintains effective-dated asset-vulnerability relationships so historical state can be reconstructed.
+- Provides validated dataset-building safeguards for duplicates, timestamps, asset grouping, and leakage.
+- Supports multiclass candidate evaluation that requires held-out data before performance is accepted.
+- Provides shadow model registration, promotion controls, retirement paths, and lifecycle audit events.
+- Separates risk-review labels and independently verified exploitation outcomes instead of treating public severity scores as business truth.
+- Runs locally as a Dockerized API, PostgreSQL database, and browser dashboard with migrations, seed data, tests, and interactive API documentation.
+
+The result is not just a screen or a scoring formula. It is a traceable, extensible foundation for responsible asset-risk prioritization and future real-data model validation.
+
 ## The problem
 
 Security teams often have three disconnected views:
@@ -111,9 +129,11 @@ Show the repository documentation and explain that ASIVM already represents inte
 
 ## Suggested narration
 
-> “ASIVM is designed around one question: which asset deserves attention first, and can we explain why? The platform connects asset identity, vulnerability evidence, intelligence context, risk assessment, anomaly review, and model governance so security decisions are more focused and more defensible.”
+> “Our goal was to build more than a vulnerability list. We built a traceable asset-risk platform that connects identity, evidence, intelligence, prioritization, review, and governance.”
 
-> “The important design choice is traceability. ASIVM does not jump from a vulnerability score to an unsupported business decision. It keeps the evidence and review path visible so the system can improve responsibly as better organizational data becomes available.”
+> “The achieved outcome is a working foundation for responsible real-data migration. It preserves current workflows, adds the contracts and auditability required for future machine learning, and makes the remaining evidence requirements explicit rather than hiding them behind synthetic metrics.”
+
+> “ASIVM is designed around one question: which asset deserves attention first, and can we explain why? The platform connects asset identity, vulnerability evidence, intelligence context, risk assessment, anomaly review, and model governance so security decisions are more focused and more defensible.”
 
 ## Strong, accurate claims
 
@@ -148,4 +168,4 @@ docker compose down
 
 ## Closing statement
 
-> “ASIVM turns asset and vulnerability data into a traceable risk workflow. It helps teams prioritize attention, understand the evidence behind decisions, and create a governed path toward stronger organizational intelligence.”
+> “ASIVM turns asset and vulnerability data into a traceable risk workflow. We achieved the core goal: a working, governed foundation that helps teams prioritize attention, understand the evidence behind decisions, and create a responsible path toward stronger organizational intelligence.”
