@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class RiskAssessmentRead(BaseModel):
+    id: int
     asset_id: int
     score: float
     model_version: str
@@ -11,6 +12,7 @@ class RiskAssessmentRead(BaseModel):
 
 
 class AnomalyRead(BaseModel):
+    id: int
     asset_id: int
     score: float
     status: str

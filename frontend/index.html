@@ -1,20 +1,118 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ASIVM</title></head>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ASIVM Prototype</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { background: #101827; color: #e5e7eb; margin: 0; }
+      main { max-width: 1100px; margin: auto; padding: 2rem; }
+      header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+      button { background: #2563eb; border: 0; border-radius: .4rem; color: white; cursor: pointer; padding: .6rem .9rem; }
+      button.secondary { background: #374151; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+      section { background: #182235; border: 1px solid #293852; border-radius: .6rem; padding: 1rem; margin-top: 1rem; }
+      h2 { font-size: 1rem; margin-top: 0; }
+      .metric { font-size: 2rem; font-weight: 700; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border-bottom: 1px solid #293852; padding: .55rem; text-align: left; }
+      .status { color: #93c5fd; min-height: 1.5rem; }
+      .error { color: #fca5a5; }
+      @media (max-width: 650px) { header { align-items: flex-start; flex-direction: column; } }
+    </style>
+  </head>
   <body>
     <main>
-      <h1>ASIVM</h1>
-      <p>Asset security visibility and machine-learning risk dashboard.</p>
-      <button id="refresh">Refresh assets</button>
-      <pre id="output">Loading...</pre>
+      <header>
+        <div>
+          <h1>ASIVM</h1>
+          <p>Asset security visibility and ML risk prototype.</p>
+        </div>
+        <button id="scan">Run demo scan</button>
+      </header>
+      <p id="status" class="status"></p>
+      <div class="grid">
+        <section><h2>Assets</h2><div id="asset-count" class="metric">-</div></section>
+        <section><h2>Vulnerabilities</h2><div id="vulnerability-count" class="metric">-</div></section>
+        <section><h2>Risk assessments</h2><div id="risk-count" class="metric">-</div></section>
+        <section><h2>Open anomalies</h2><div id="anomaly-count" class="metric">-</div></section>
+      </div>
+      <section>
+        <h2>Assets</h2>
+        <table><thead><tr><th>Name</th><th>Created</th><th>ID</th></tr></thead><tbody id="assets"></tbody></table>
+      </section>
+      <section>
+        <h2>Vulnerabilities</h2>
+        <table><thead><tr><th>CVE</th><th>CVSS</th><th>EPSS</th><th>KEV</th></tr></thead><tbody id="vulnerabilities"></tbody></table>
+      </section>
+      <section>
+        <h2>Anomalies</h2>
+        <table><thead><tr><th>Asset</th><th>Score</th><th>Status</th><th>Action</th></tr></thead><tbody id="anomalies"></tbody></table>
+      </section>
     </main>
     <script>
-      const output = document.querySelector("#output");
-      document.querySelector("#refresh").onclick = async () => {
-        const response = await fetch("http://localhost:8000/assets");
-        output.textContent = JSON.stringify(await response.json(), null, 2);
+      const API = "http://localhost:8000";
+      const API_KEY = "change-me";
+      const headers = { "X-API-Key": API_KEY };
+      const $ = (id) => document.querySelector(id);
+      const status = (message, error = false) => {
+        $("#status").textContent = message;
+        $("#status").className = error ? "status error" : "status";
       };
-      document.querySelector("#refresh").click();
+      const request = async (path, options = {}) => {
+        const response = await fetch(`${API}${path}`, { ...options, headers: { ...headers, ...(options.headers || {}) }});
+        if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
+        return response.json();
+      };
+      const cell = (value) => {
+        const element = document.createElement("td");
+        element.textContent = value ?? "-";
+        return element;
+      };
+      async function refresh() {
+        try {
+          const [assets, vulnerabilities, assessments, anomalies] = await Promise.all([
+            request("/assets"), request("/vulnerabilities"), request("/risk/assessments"), request("/risk/anomalies")
+          ]);
+          $("#asset-count").textContent = assets.length;
+          $("#vulnerability-count").textContent = vulnerabilities.length;
+          $("#risk-count").textContent = assessments.length;
+          $("#anomaly-count").textContent = anomalies.filter((item) => item.status === "open").length;
+          $("#assets").replaceChildren(...assets.map((item) => {
+            const row = document.createElement("tr");
+            row.append(cell(item.name), cell(item.created_at && new Date(item.created_at).toLocaleString()), cell(item.id));
+            return row;
+          }));
+          $("#vulnerabilities").replaceChildren(...vulnerabilities.map((item) => {
+            const row = document.createElement("tr");
+            row.append(cell(item.cve_id), cell(item.cvss_score), cell(item.epss_score), cell(item.is_kev ? "Yes" : "No"));
+            return row;
+          }));
+          $("#anomalies").replaceChildren(...anomalies.map((item) => {
+            const row = document.createElement("tr");
+            row.append(cell(item.asset_id), cell(item.score.toFixed(3)), cell(item.status));
+            const action = document.createElement("td");
+            if (item.status === "open") {
+              const button = document.createElement("button");
+              button.className = "secondary";
+              button.textContent = "Triage";
+              button.onclick = async () => { await request(`/risk/anomalies/${item.id}/triage`, { method: "PATCH" }); refresh(); };
+              action.append(button);
+            } else action.textContent = "-";
+            row.append(action);
+            return row;
+          }));
+          status("Dashboard refreshed");
+        } catch (error) {
+          status(`Unable to load dashboard: ${error.message}`, true);
+        }
+      }
+      $("#scan").onclick = async () => {
+        try { await request("/scans", { method: "POST" }); status("Demo scan completed"); await refresh(); }
+        catch (error) { status(`Scan failed: ${error.message}`, true); }
+      };
+      refresh();
     </script>
   </body>
 </html>
