@@ -7,7 +7,12 @@ from app.core.config import get_settings
 from app.core.database import Base
 from app.modules.assets.models import Asset, AssetIdentifier  # noqa: F401
 from app.modules.scans.models import AssetObservation, Scan  # noqa: F401
-from app.modules.vulnerabilities.models import AssetVulnerability, VulnerabilityCatalog  # noqa: F401
+from app.modules.vulnerabilities.models import (  # noqa: F401
+    AssetVulnerability,
+    VulnerabilityCatalog,
+    VulnerabilityIngestionRun,
+    VulnerabilityIntelligenceSnapshot,
+)
 from app.modules.risk_ml.models import (  # noqa: F401
     AnomalyEvent,
     AnomalyStatus,
