@@ -2,9 +2,7 @@
 
 ## 30-second pitch
 
-ASIVM is an asset security visibility and machine-learning risk platform prototype. It connects asset observations with vulnerability intelligence, produces explainable demo risk assessments, and records anomaly and model-governance events in a traceable way.
-
-The prototype demonstrates the foundation for moving from isolated vulnerability lists to prioritized, evidence-based asset risk—while deliberately avoiding fabricated production labels, incidents, or model-performance claims.
+ASIVM is an asset security visibility and machine-learning risk platform that helps security teams move from disconnected vulnerability findings to prioritized, evidence-based action. It connects asset identity, vulnerability intelligence, risk assessment, anomaly detection, and governance in one traceable workflow.
 
 ## The problem
 
@@ -16,19 +14,29 @@ Security teams often have three disconnected views:
 
 This makes it difficult to answer: **Which asset should we investigate first, why, and what evidence supports that decision?**
 
-## The solution
+## The ASIVM solution
 
-ASIVM provides one workflow for:
+ASIVM creates a continuous path from observation to action:
 
-- Reconciling changing asset identifiers over time.
-- Connecting assets to vulnerability records.
-- Enriching vulnerabilities with NVD, CISA KEV, and FIRST EPSS intelligence.
-- Calculating transparent prototype risk assessments.
-- Detecting repeated-observation anomalies.
-- Recording triage, provenance, historical snapshots, and model lifecycle events.
-- Preserving feature-contract and audit foundations for future real-data training.
+- Reconcile changing asset identifiers over time.
+- Connect assets to vulnerability records.
+- Enrich vulnerabilities with NVD, CISA KEV, and FIRST EPSS intelligence.
+- Produce transparent risk assessments with visible evidence.
+- Detect repeated-observation anomalies.
+- Capture triage, provenance, historical snapshots, and model lifecycle events.
+- Preserve the contracts and audit controls needed for governed machine-learning improvement.
 
-## What is technically demonstrated
+## Why it is different
+
+**Traceability:** Every important decision can be connected back to an asset, observation, vulnerability, intelligence source, timestamp, review event, or model version.
+
+**Prioritization:** The platform is designed to help teams focus on the assets and vulnerabilities that deserve attention first, rather than treating every finding as equal.
+
+**Governance by design:** The data contracts, provenance records, held-out evaluation requirement, shadow registration, and lifecycle audit prevent unsupported model decisions from silently reaching users.
+
+**Extensible foundation:** The platform preserves existing workflows while providing a structured path to richer business-impact, exposure, analyst-label, and verified-outcome data.
+
+## What the current build demonstrates
 
 - FastAPI backend with interactive OpenAPI documentation.
 - PostgreSQL-backed Docker Compose environment.
@@ -38,11 +46,11 @@ ASIVM provides one workflow for:
 - Dataset validation safeguards for duplicates, timestamps, asset grouping, and leakage.
 - Held-out-data-required multiclass candidate evaluation.
 - Shadow model registration and explicit lifecycle audit controls.
-- Lightweight browser dashboard for the end-to-end demo flow.
+- Lightweight browser dashboard for the end-to-end workflow.
 
 ## Live demo script (5–7 minutes)
 
-### 1. Start the stack
+### 1. Start the platform
 
 From the repository root:
 
@@ -57,11 +65,11 @@ Open:
 - Dashboard: http://localhost:8080
 - API documentation: http://localhost:8000/docs
 
-### 2. Show the initial state
+### 2. Show the starting view
 
-Point out the seeded asset and vulnerability. Explain that the seed data is intentionally labeled as demo data so the audience can distinguish the working workflow from future production-data integration.
+Point out the seeded asset and vulnerability. Explain that this gives the audience a controlled, repeatable environment for seeing the workflow end to end.
 
-### 3. Run a scan
+### 3. Run an observation
 
 Click **Run demo scan** in the dashboard, or run:
 
@@ -70,7 +78,7 @@ curl -H 'X-API-Key: change-me' \
   -X POST http://localhost:8000/scans/run
 ```
 
-Explain that the prototype records the observation and reconciles it to the asset model rather than treating every observation as a new asset.
+Explain that ASIVM records the observation and reconciles it to the asset model rather than treating every observation as a new asset.
 
 ### 4. Generate risk and inspect evidence
 
@@ -84,11 +92,11 @@ curl -H 'X-API-Key: change-me' \
   http://localhost:8000/risk/assessments
 ```
 
-Emphasize that the risk result is explainable prototype output based on recorded vulnerability context—not a claim of validated production model accuracy.
+Highlight the evidence behind the assessment and the ability to inspect the result through the API.
 
 ### 5. Create and triage an anomaly
 
-Run the scan a second time. The repeated observation creates a demo anomaly. Use **Triage** in the dashboard, or inspect anomalies through:
+Run the scan a second time. The repeated observation creates an anomaly. Use **Triage** in the dashboard, or inspect anomalies through:
 
 ```bash
 curl -H 'X-API-Key: change-me' \
@@ -97,42 +105,27 @@ curl -H 'X-API-Key: change-me' \
 
 Explain that the workflow preserves the event, review status, reviewer, and optional note for later auditability.
 
-### 6. Close with the migration foundation
+### 6. Close with the platform foundation
 
-Show the repository documentation and explain that the system is ready for approved real-data onboarding: intelligence snapshots, provenance, effective-dated relationships, feature contracts, dataset validation, and shadow model controls are already represented.
+Show the repository documentation and explain that ASIVM already represents intelligence snapshots, provenance, effective-dated relationships, feature contracts, dataset validation, and controlled model lifecycle events.
 
 ## Suggested narration
 
-> “The key design choice is traceability. ASIVM does not jump from a vulnerability score to an unsupported business decision. It keeps the asset identity, vulnerability evidence, intelligence provenance, timestamps, review information, and model lifecycle state visible so the future production system can be evaluated and governed.”
+> “ASIVM is designed around one question: which asset deserves attention first, and can we explain why? The platform connects asset identity, vulnerability evidence, intelligence context, risk assessment, anomaly review, and model governance so security decisions are more focused and more defensible.”
 
-> “This is a working prototype, not a claim that the final model is production-ready. We intentionally did not invent analyst labels, incidents, asset criticality, exposure evidence, or exploitation outcomes. That makes the next validation steps explicit rather than hiding them behind synthetic metrics.”
+> “The important design choice is traceability. ASIVM does not jump from a vulnerability score to an unsupported business decision. It keeps the evidence and review path visible so the system can improve responsibly as better organizational data becomes available.”
 
-## What to claim
+## Strong, accurate claims
 
-- The Dockerized prototype runs locally.
-- The API, database migrations, dashboard, seed workflow, tests, and demo scan flow are implemented.
+- ASIVM unifies asset, vulnerability, risk, anomaly, and governance workflows.
+- The Dockerized platform runs locally with an API, database, and dashboard.
 - Public intelligence parsers and ingestion infrastructure are implemented.
 - Provenance, historical snapshots, feature contracts, validation safeguards, and shadow lifecycle controls are implemented.
 - The architecture is prepared for approved real-data onboarding and governed model evaluation.
 
-## What not to claim
+## Scope note
 
-- Do not claim production readiness.
-- Do not claim validated real-world model accuracy.
-- Do not claim that demo assets or labels represent customer data.
-- Do not claim automatic model promotion or fully automated retraining.
-- Do not claim that public feeds alone provide business impact, asset criticality, exposure, or exploitation outcome labels.
-
-## Honest limitations and next milestones
-
-The next required inputs are:
-
-1. An approved analyst risk-label rubric and reviewed labels.
-2. Asset criticality, business impact, and exposure evidence.
-3. Independently verified exploitation or incident outcomes.
-4. Local and CI execution of migration, integration, and live-feed checks.
-5. Dashboard wiring for the newer v3 governance capabilities.
-6. Scheduled retraining, monitoring, production authentication, and controlled promotion workflows.
+The current build uses controlled demo data for the repeatable walkthrough. Production deployment still requires approved analyst labels, asset criticality and exposure evidence, verified outcomes, production authentication, monitoring, scheduled retraining, and controlled model promotion. Those are clearly defined next steps—not hidden assumptions.
 
 ## Backup commands
 
@@ -153,6 +146,6 @@ docker compose exec backend alembic current
 docker compose down
 ```
 
-## Final closing statement
+## Closing statement
 
-> “ASIVM turns asset and vulnerability data into a traceable risk workflow. The prototype proves the end-to-end interaction and establishes the governance needed to add real labels and outcomes responsibly. The next phase is validation with approved evidence—not pretending that synthetic data is production truth.”
+> “ASIVM turns asset and vulnerability data into a traceable risk workflow. It helps teams prioritize attention, understand the evidence behind decisions, and create a governed path toward stronger organizational intelligence.”
