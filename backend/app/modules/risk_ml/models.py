@@ -49,6 +49,17 @@ class MLTrainingRun(Base):
     status: Mapped[str] = mapped_column(String(32), default="running")
 
 
+class ModelLifecycleEvent(Base):
+    __tablename__ = "model_lifecycle_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    model_version_id: Mapped[int] = mapped_column(ForeignKey("ml_model_versions.id"), index=True)
+    event_type: Mapped[str] = mapped_column(String(32))
+    actor: Mapped[str] = mapped_column(String(255))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    details: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class RiskLabel(Base):
     __tablename__ = "risk_labels"
     __table_args__ = (
@@ -64,6 +75,19 @@ class RiskLabel(Base):
     assessed_at: Mapped[datetime] = mapped_column(DateTime)
     justification: Mapped[str] = mapped_column(String(4000))
     label_version: Mapped[str] = mapped_column(String(32))
+
+
+class RiskAssessmentReview(Base):
+    __tablename__ = "risk_assessment_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(ForeignKey("risk_assessments.id"), index=True)
+    decision: Mapped[str] = mapped_column(String(32))
+    reviewer: Mapped[str] = mapped_column(String(255))
+    reviewed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    corrected_class: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    justification: Mapped[str] = mapped_column(String(4000))
+    validated_label_id: Mapped[int | None] = mapped_column(ForeignKey("risk_labels.id"), nullable=True)
 
 
 class ExploitationOutcome(Base):
