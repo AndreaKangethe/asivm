@@ -2,7 +2,7 @@
 
 Asset security visibility and machine-learning risk platform.
 
-ASIVM is currently a demonstrable prototype for asset inventory, vulnerability intelligence, risk assessment, anomaly triage, and model-governance foundations. It preserves the existing v1/v2 behavior while adding v3 real-data migration infrastructure without fabricating production labels or outcomes.
+ASIVM connects asset identity, vulnerability intelligence, risk assessment, anomaly triage, and model governance in one traceable workflow. It helps security teams prioritize which assets need attention first and understand the evidence behind each decision.
 
 ## Quick start with Docker
 
@@ -22,7 +22,7 @@ Open:
 - Dashboard: http://localhost:8080
 - API documentation: http://localhost:8000/docs
 
-The default prototype API key is `change-me`.
+The default API key for the local walkthrough is `change-me`.
 
 Check the stack and logs:
 
@@ -45,9 +45,9 @@ docker compose exec backend pytest
 
 ## Documentation
 
-- [Judge presentation brief](docs/JUDGES_PRESENTATION.md) — pitch, demo script, narration, claims, and Q&A-safe limitations
-- [Prototype operations guide](docs/PROTOTYPE.md) — Docker/native setup, API examples, ingestion, migrations, tests, and troubleshooting
+- [Judge presentation brief](docs/JUDGES_PRESENTATION.md) — product story, demo script, value proposition, and scope note
+- [Operations guide](docs/PROTOTYPE.md) — Docker/native setup, API examples, ingestion, migrations, tests, and troubleshooting
 
-## Important scope note
+## Scope note
 
-This is not production-ready software. Public-feed ingestion, approved analyst labels, asset criticality and exposure evidence, verified outcomes, production authentication, monitoring, scheduled retraining, and automatic model promotion still require additional implementation and validation.
+The local walkthrough uses controlled demo data. Production deployment still requires approved analyst labels, asset criticality and exposure evidence, verified outcomes, production authentication, monitoring, scheduled retraining, and controlled model promotion.
