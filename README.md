@@ -45,14 +45,8 @@ docker compose exec backend pytest
 
 ## Documentation
 
-See [docs/PROTOTYPE.md](docs/PROTOTYPE.md) for:
-
-- Docker and native setup
-- Demo workflow and API examples
-- Public-feed ingestion
-- Database migrations 0001–0008
-- Tests and troubleshooting
-- Prototype scope and limitations
+- [Judge presentation brief](docs/JUDGES_PRESENTATION.md) — pitch, demo script, narration, claims, and Q&A-safe limitations
+- [Prototype operations guide](docs/PROTOTYPE.md) — Docker/native setup, API examples, ingestion, migrations, tests, and troubleshooting
 
 ## Important scope note
 
