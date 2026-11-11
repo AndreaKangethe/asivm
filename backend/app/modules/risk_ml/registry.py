@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.risk_ml.features import FEATURE_NAMES, FEATURE_NAMES_V2, FEATURE_NAMES_V3
-from app.modules.risk_ml.models import MLModelVersion
+from app.modules.risk_ml.models import MLModelVersion, ModelLifecycleEvent
 
 
 FEATURE_NAMES_BY_VERSION = {
@@ -69,6 +69,7 @@ class ModelRegistry:
         metrics: dict,
         training_metadata: dict,
         contract_hash: str | None = None,
+        actor: str = "training-job",
     ) -> MLModelVersion:
         if feature_version not in SUPPORTED_FEATURE_VERSIONS:
             raise ValueError(f"unsupported feature version: {feature_version}")
@@ -87,17 +88,20 @@ class ModelRegistry:
             is_active=False,
         )
         db.add(record)
+        db.flush()
+        db.add(ModelLifecycleEvent(model_version_id=record.id, event_type="registered_shadow", actor=actor, details=metrics))
         db.commit()
         db.refresh(record)
         return record
 
-    def promote(self, db: Session, version: str) -> MLModelVersion:
+    def promote(self, db: Session, version: str, actor: str = "operator") -> MLModelVersion:
         candidate = db.scalar(select(MLModelVersion).where(MLModelVersion.version == version))
         if candidate is None:
             raise ValueError(f"unknown model version: {version}")
         self._validate_contract(candidate)
         if candidate.deployment_mode != "shadow":
             raise ValueError("only shadow candidates can be explicitly promoted")
+        retired = []
         for active in db.scalars(
             select(MLModelVersion).where(
                 MLModelVersion.name == candidate.name,
@@ -107,8 +111,17 @@ class ModelRegistry:
         ):
             active.is_active = False
             active.deployment_mode = "retired"
+            retired.append(active.version)
         candidate.is_active = True
         candidate.deployment_mode = "active"
+        db.add(
+            ModelLifecycleEvent(
+                model_version_id=candidate.id,
+                event_type="promoted",
+                actor=actor,
+                details={"retired_versions": retired},
+            )
+        )
         db.commit()
         db.refresh(candidate)
         return candidate
